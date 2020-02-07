@@ -1,0 +1,41 @@
+# network_CNN.yaml file
+
+Network:
+  epochs: 50
+  batch_size: 10
+  n_steps: 5
+  dataset: "FashionMNIST"
+  SpikeBasedBPTT: True
+  lr: 0.0005
+
+Layers:
+  hidden_1:
+    type: "linear"
+    n_inputs: 784
+    n_outputs: 400
+    weight_scale: 1
+    tau_m: 8
+    tau_s: 2
+    threshold: 1
+    batch_norm1d: False
+
+  hidden_2:
+    type: "linear"
+    n_inputs: 400
+    n_outputs: 400
+    weight_scale: 1
+    tau_m: 8
+    tau_s: 2
+    threshold: 1
+    batch_norm1d: False
+
+  output:
+    type: "linear"
+    n_inputs: 400
+    n_outputs: 10
+    weight_scale: 1
+    tau_m: 8
+    tau_s: 2
+    threshold: 1
+    batch_norm1d: False
+
