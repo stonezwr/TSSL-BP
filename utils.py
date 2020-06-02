@@ -4,7 +4,6 @@ import torch
 import matplotlib.pyplot as plt
 import pycuda.driver as cuda
 import pycuda.autoinit  # Necessary for using its functions
-from rich.progress import Progress
 
 
 # task_train = Progress().add_task("[red]Training...", total=100)
