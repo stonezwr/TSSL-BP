@@ -1,5 +1,4 @@
 import torch
-from rich.console import Console
 
 
 dtype = None
@@ -7,7 +6,6 @@ device = None
 n_steps = None
 partial_a = None
 tau_s = None
-console = Console()
 
 def init(dty, dev, n_t, ts):
     global dtype, device, n_steps, partial_a, tau_s
