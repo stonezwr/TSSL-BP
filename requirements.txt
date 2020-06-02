@@ -4,3 +4,7 @@ numpy
 matplotlib
 tqdm
 yaml
+pandas
+pycuda
+seaborn
+sklearn

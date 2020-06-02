@@ -1,50 +1,46 @@
-# network_CNN.yaml file
-# reference: 91.6%
 Network:
-  epochs: 200
-  batch_size: 10
+  epochs: 100
+  batch_size: 50
   n_steps: 5
   dataset: "FashionMNIST"
-  SpikeBasedBPTT: True
-  lr: 0.0001
+  rule: "TSSLBP"
+  data_path: "../../datasets/mnist"
+  lr: 0.0005
+  loss: "count"
+  n_class: 10
+  desired_count: 4
+  undesired_count: 1
+  tau_m: 4
+  tau_s: 2
+  model: "LIF"
 
 Layers:
   conv_1:
-    type: "convspiking"
+    type: "conv"
     in_channels: 1
     out_channels: 32
     kernel_size: 5
     weight_scale: 1
     padding: 2
-    tau_m: 8
-    tau_s: 2
     threshold: 1
-    batch_norm3d: True
 
   pooling_1:
     type: "pooling"
     kernel_size: 2
-    tau_m: 8
-    tau_s: 2
     threshold: 1
 
   conv_2:
-    type: "convspiking"
+    type: "conv"
     in_channels: 32
     out_channels: 64
     kernel_size: 5
     weight_scale: 1
     padding: 2
-    tau_m: 8
-    tau_s: 2
     threshold: 1
-    batch_norm3d: False
 
   pooling_2:
     type: "pooling"
     kernel_size: 2
-    tau_m: 8
-    tau_s: 2
     threshold: 1
 
   FC_1:
@@ -52,18 +48,11 @@ Layers:
     n_inputs: 3136
     n_outputs: 1024
     weight_scale: 1
-    tau_m: 8
-    tau_s: 2
     threshold: 1
-    batch_norm1d: False
 
   output:
     type: "linear"
     n_inputs: 1024
     n_outputs: 10
     weight_scale: 1
-    tau_m: 8
-    tau_s: 2
     threshold: 1
-    batch_norm1d: False
-

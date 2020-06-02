@@ -1,7 +1,15 @@
+import os
 import numpy as np
+import torch
 import matplotlib.pyplot as plt
+import pycuda.driver as cuda
+import pycuda.autoinit  # Necessary for using its functions
+from rich.progress import Progress
 
 
+# task_train = Progress().add_task("[red]Training...", total=100)
+# task_test = Progress().add_task("[green]Testing...", total=100)
+# 
 class learningStat():
     '''
     This class collect the learning statistics over the epoch.
@@ -101,7 +109,7 @@ class learningStat():
         maxAccuracy = self.maxAccuracy
 
         if loss is None:    # no stats available
-            return None
+            return 'No testing results'
         elif accuracy is None:
             if minloss is None: # accuracy and minloss stats is not available
                 return 'loss = %-11.5g'%(loss)
@@ -206,10 +214,8 @@ class learningStats():
 
         print(epochStr + iterStr + profileStr)
         print(self.training.displayString())
-        self.linesPrinted += 2
-        if self.testing.displayString() is not None:
-            print(self.testing.displayString())
-            self.linesPrinted += 1
+        print(self.testing.displayString())
+        self.linesPrinted += 3
 
         if footer is not None:
             for f in footer:
@@ -330,3 +336,91 @@ class learningStats():
         self.testing.maxAccuracy = saved['accuracy'][:saved['epoch'], 1].max()
 
         return saved['epoch']
+
+
+class aboutCudaDevices():
+    def __init__(self):
+        pass
+
+    def num_devices(self):
+        """Return number of devices connected."""
+        return cuda.Device.count()
+
+    def devices(self):
+        """Get info on all devices connected."""
+        num = cuda.Device.count()
+        print("%d device(s) found:" % num)
+        for i in range(num):
+            print(cuda.Device(i).name(), "(Id: %d)" % i)
+
+    def mem_info(self):
+        """Get available and total memory of all devices."""
+        available, total = cuda.mem_get_info()
+        print("Available: %.2f GB\nTotal:     %.2f GB" % (available / 1e9, total / 1e9))
+
+    def attributes(self, device_id=0):
+        """Get attributes of device with device Id = device_id"""
+        return cuda.Device(device_id).get_attributes()
+
+    def info(self):
+        """Class representation as number of devices connected and about them."""
+        num = cuda.Device.count()
+        string = ""
+        string += ("%d device(s) found:\n" % num)
+        for i in range(num):
+            string += ("    %d) %s (Id: %d)\n" % ((i + 1), cuda.Device(i).name(), i))
+            string += ("          Memory: %.2f GB\n" % (cuda.Device(i).total_memory() / 1e9))
+        return string
+
+
+class EarlyStopping:
+    """Early stops the training if validation loss doesn't improve after a given patience."""
+    def __init__(self, patience=50, verbose=False, delta=0):
+        """
+        Args:
+            patience (int): How long to wait after last time validation loss improved.
+                            Default: 7
+            verbose (bool): If True, prints a message for each validation loss improvement.
+                            Default: False
+            delta (float): Minimum change in the monitored quantity to qualify as an improvement.
+                            Default: 0
+        """
+        self.patience = patience
+        self.verbose = verbose
+        self.counter = 0
+        self.best_score = None
+        self.early_stop = False
+        self.val_min = np.Inf
+        self.delta = delta
+
+    def __call__(self, val, model, epoch):
+
+        score = val
+
+        if self.best_score is None:
+            self.best_score = score
+            self.save_checkpoint(model, val, epoch)
+        elif score < self.best_score + self.delta:
+            self.counter += 1
+            if self.verbose:
+                print(f'EarlyStopping counter: {self.counter} out of {self.patience}')
+            if self.counter >= self.patience:
+                self.early_stop = True
+        else:
+            self.best_score = score
+            self.save_checkpoint(model, val, epoch)
+            self.counter = 0
+
+    def save_checkpoint(self, network, val, epoch):
+        """Saves model when validation loss decrease."""
+        if self.verbose:
+            print(f'Accuracy increased ({self.val_min:.6f} --> {val:.6f}).  Saving model ...')
+        state = {
+            'net': network.state_dict(),
+            'loss': val,
+            'epoch': epoch,
+        }
+        if not os.path.isdir('checkpoint'):
+            os.mkdir('checkpoint')
+        torch.save(state, './checkpoint/ckpt.pth')
+        self.val_min = val

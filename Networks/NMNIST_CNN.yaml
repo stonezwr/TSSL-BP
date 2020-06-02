@@ -1,0 +1,52 @@
+Network:
+  epochs: 100
+  batch_size: 50
+  n_steps: 30
+  dataset: "NMNIST_Spiking"
+  rule: "TSSLBP"
+  data_path: "../../datasets/mnist/2312_3000_stable"
+  lr: 0.0005
+  loss: "count"
+  n_class: 10
+  desired_count: 15
+  undesired_count: 3
+  tau_m: 8
+  tau_s: 4
+  model: "LIF"
+
+Layers:
+  conv_1:
+    type: "conv" # 32
+    in_channels: 2
+    out_channels: 12
+    kernel_size: 5
+    weight_scale: 1
+    padding: 1
+    threshold: 1
+
+  pooling_1:  # 16
+    type: "pooling"
+    kernel_size: 2
+    threshold: 0.5
+
+  conv_2: # 12
+    type: "conv"
+    in_channels: 12
+    out_channels: 64
+    kernel_size: 5
+    weight_scale: 1
+    padding: 0
+    threshold: 1
+
+  pooling_2: # 6
+    type: "pooling"
+    kernel_size: 2
+    threshold: 0.5
+
+  output:
+    type: "linear"
+    n_inputs: 2304
+    n_outputs: 10
+    weight_scale: 1
+    threshold: 1
+

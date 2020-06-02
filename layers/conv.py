@@ -4,13 +4,16 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as f
 import torch.nn.init as init
+import functions.TSSLBP as TSSLBP
+import global_v as glv
 
 
 class ConvLayer(nn.Conv3d):
-    def __init__(self, config, name, in_shape, groups=1):
+    def __init__(self, network_config, config, name, in_shape, groups=1):
         self.name = name
+        self.layer_config = config
+        self.network_config = network_config
         self.type = config['type']
-        self.batch_norm = config['batch_norm3d']
         in_features = config['in_channels']
         out_features = config['out_channels']
         kernel_size = config['kernel_size']
@@ -67,21 +70,11 @@ class ConvLayer(nn.Conv3d):
         else:
             raise Exception('dilation can be either int or tuple of size 2. It was: {}'.format(dilation.shape))
 
-        # groups
-        # no need to check for groups. It can only be int
-
-        # print('inChannels :', inChannels)
-        # print('outChannels:', outChannels)
-        # print('kernel     :', kernel, kernelSize)
-        # print('stride     :', stride)
-        # print('padding    :', padding)
-        # print('dilation   :', dilation)
-        # print('groups     :', groups)
-
         super(ConvLayer, self).__init__(in_features, out_features, kernel, stride, padding, dilation, groups,
-                                        bias=True)
-
+                                        bias=False)
+        nn.init.kaiming_normal_(self.weight)
         self.weight = torch.nn.Parameter(weight_scale * self.weight, requires_grad=True)
+
         self.in_shape = in_shape
         self.out_shape = [out_features, int((in_shape[1]+2*padding[0]-kernel[0])/stride[0]+1),
                           int((in_shape[2]+2*padding[1]-kernel[1])/stride[1]+1)]
@@ -97,3 +90,17 @@ class ConvLayer(nn.Conv3d):
 
     def get_parameters(self):
         return self.weight
+
+    def forward_pass(self, x, epoch):
+        y = self.forward(x)
+        shape = x.shape
+        if shape[4] > shape[0] * 10:
+            y = TSSLBP.PSP_spike_long_time.apply(y, self.network_config, self.layer_config)
+        else:
+            y = TSSLBP.PSP_spike_large_batch.apply(y, self.network_config, self.layer_config)
+        return y
+
+    def weight_clipper(self):
+        w = self.weight.data
+        w = w.clamp(-4, 4)
+        self.weight.data = w

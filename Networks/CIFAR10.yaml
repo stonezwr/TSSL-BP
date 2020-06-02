@@ -1,0 +1,121 @@
+Network:
+  epochs: 150
+  batch_size: 50
+  n_steps: 5
+  dataset: "CIFAR10"
+  data_path: "../../datasets/cifar10"
+  rule: "TSSLBP"
+  lr: 0.0002
+  loss: "kernel"
+  n_class: 10
+  desired_count: 5
+  undesired_count: 1
+  tau_m: 5
+  tau_s: 2
+  model: "LIF"
+
+Layers:
+  conv_1:
+    type: "conv"   # 32*32  28*28
+    in_channels: 3
+    out_channels: 96
+    kernel_size: 3
+    weight_scale: 5
+    padding: 1
+    threshold: 1
+
+  dropout_1:
+    type: "dropout"
+    p: 0.2
+
+  conv_2:
+    type: "conv" # 32*32  28*28
+    in_channels: 96
+    out_channels: 256
+    kernel_size: 3
+    weight_scale: 5
+    padding: 1
+    threshold: 1
+
+  pooling_1:
+    type: "pooling"
+    kernel_size: 2
+    threshold: 0.5
+
+  dropout_2:
+    type: "dropout"
+    p: 0.2
+
+  conv_3:
+    type: "conv" # 16*16  14*14
+    in_channels: 256
+    out_channels: 384
+    kernel_size: 3
+    weight_scale: 5
+    padding: 1
+    threshold: 1
+
+  pooling_2:
+    type: "pooling"
+    kernel_size: 2
+    threshold: 0.5
+
+  dropout_3:
+    type: "dropout"
+    p: 0.2
+
+  conv_4:
+    type: "conv"  # 8*8  7*7
+    in_channels: 384
+    out_channels: 384
+    kernel_size: 3
+    weight_scale: 5
+    padding: 1
+    threshold: 1
+
+  dropout_4:
+    type: "dropout"
+    p: 0.2
+
+  conv_5:
+    type: "conv"  # 8*8  7*7
+    in_channels: 384
+    out_channels: 256
+    kernel_size: 3
+    weight_scale: 5
+    padding: 1
+    threshold: 1
+
+  dropout_5:
+    type: "dropout"
+    p: 0.2
+
+  FC_1:
+    type: "linear"
+    n_inputs: 16384
+    n_outputs: 1024
+    weight_scale: 1
+    threshold: 1
+
+  dropout_6:
+    type: "dropout"
+    p: 0.2
+
+  FC_2:
+    type: "linear"
+    n_inputs: 1024
+    n_outputs: 1024
+    weight_scale: 1
+    threshold: 1
+
+  dropout_7:
+    type: "dropout"
+    p: 0.2
+
+  output:
+    type: "linear"
+    n_inputs: 1024
+    n_outputs: 10
+    weight_scale: 1
+    threshold: 1
+

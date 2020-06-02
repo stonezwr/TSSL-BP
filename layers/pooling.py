@@ -5,8 +5,10 @@ import numpy as np
 
 
 class PoolLayer(nn.Conv3d):
-    def __init__(self, config, name, in_shape):
+    def __init__(self, network_config, config, name, in_shape):
         self.name = name
+        self.layer_config = config
+        self.network_config = network_config
         self.type = config['type']
         kernel_size = config['kernel_size']
         if 'padding' in config:
@@ -61,13 +63,6 @@ class PoolLayer(nn.Conv3d):
             dilation = (dilation[0], dilation[1], 1)
         else:
             raise Exception('dilation can be either int or tuple of size 2. It was: {}'.format(dilation.shape))
-
-        # print('theta      :', theta)
-        # print('kernel     :', kernel, kernelSize)
-        # print('stride     :', stride)
-        # print('padding    :', padding)
-        # print('dilation   :', dilation)
-
         super(PoolLayer, self).__init__(1, 1, kernel, stride, padding, dilation, bias=False)
 
         self.weight = torch.nn.Parameter(1 * theta * torch.ones(self.weight.shape), requires_grad=False)
@@ -81,7 +76,6 @@ class PoolLayer(nn.Conv3d):
         print("-----------------------------------------")
 
     def forward(self, x):
-
         result = f.conv3d(x.reshape((x.shape[0], 1, x.shape[1] * x.shape[2], x.shape[3], x.shape[4])),
                           self.weight, self.bias,
                           self.stride, self.padding, self.dilation)
@@ -89,3 +83,10 @@ class PoolLayer(nn.Conv3d):
 
     def get_parameters(self):
         return self.weight
+
+    def forward_pass(self, x, epoch):
+        y1 = self.forward(x)
+        return y1
+
+    def weight_clipper(self):
+        return
