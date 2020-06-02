@@ -14,11 +14,13 @@ $ pip install -r requirements
 # Preprocessing
 ## N-MNIST
 To reduce the time resolution of the original N-MNIST samples, move and run the NMNIST_Converter.m in the same directory of N-MNIST dataset. 
+
 Parameters: use_two_channels = 1, time_window = 3000.
 
 # Run the code
 ## Before running
 Modify the data path and network settings in the config files of the Networks folder. 
+
 Select the index of GPU (0 by default)
 
 ## MNIST:
