@@ -140,7 +140,7 @@ class PSP_spike_long_time(torch.autograd.Function):  # a and u is the incremnet 
         partial_a_tmp = glv.partial_a[..., 0, :].repeat(shape[0], shape[1], shape[2], shape[3], 1)
         grad_a = torch.empty_like(delta_u)
         for t in range(n_steps):
-            grad_a[..., t] = torch.sum(partial_a_tmp[..., 0:n_steps-t]*grad_delta[..., t:n_steps]) 
+            grad_a[..., t] = torch.sum(partial_a_tmp[..., 0:n_steps-t]*grad_delta[..., t:n_steps], dim=4) 
 
         if torch.sum(outputs)/(shape[0] * shape[1] * shape[2] * shape[3] * shape[4]) > 0.1:
             # part one, inter-neuron
