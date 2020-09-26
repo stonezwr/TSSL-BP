@@ -1,11 +1,11 @@
 Network:
-  epochs: 100
+  epochs: 200
   batch_size: 100
   n_steps: 5
   dataset: "MNIST"
   rule: "TSSLBP"
   data_path: "../../datasets/mnist"
-  lr: 0.0002
+  lr: 0.0005
   loss: "kernel"
   n_class: 10
   desired_count: 4
