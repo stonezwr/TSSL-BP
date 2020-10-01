@@ -16,7 +16,7 @@ pip install -r requirements.txt
 ```
 
 ### Datasets
-NMNIST: [https://www.garrickorchard.com/datasets/n-mnist](https://www.garrickorchard.com/datasets/n-mnist)
+NMNIST: [dataset](https://www.garrickorchard.com/datasets/n-mnist), [preprocessing](https://github.com/stonezwr/TSSL-BP/tree/master/preprocessing/NMNIST)
 
 ## Training
 ### Before running
