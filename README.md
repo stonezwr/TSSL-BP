@@ -1,50 +1,58 @@
-# TSSL-BP
-This repo is the Pytorch implementation of SNNs trained by the Temporal Spike Sequence Learning via Backpropagation (TSSL-BP).
+# Temporal Spike Sequence Learning via Backpropagation for Deep Spiking Neural Networks (TSSL-BP)
 
-# Dependencies and Libraries
+This repository is the official implementation of [Temporal Spike Sequence Learning via Backpropagation for Deep Spiking Neural Networks](https://arxiv.org/abs/2002.10085). 
+
+## Requirements
+### Dependencies and Libraries
 * python 3.7
 * pytorch
 * torchvision
 
-# Installation
-```sh
-$ pip install -r requirements
+### Installation
+To install requirements:
+
+```setup
+pip install -r requirements.txt
 ```
 
-# Preprocessing
-## N-MNIST
-To reduce the time resolution of the original N-MNIST samples, move and run the NMNIST_Converter.m in the same directory of N-MNIST dataset. 
+### Datasets
+NMNIST: [https://www.garrickorchard.com/datasets/n-mnist](https://www.garrickorchard.com/datasets/n-mnist)
 
-Parameters: use_two_channels = 1, time_window = 3000.
-
-# Run the code
-## Before running
+## Training
+### Before running
 Modify the data path and network settings in the config files of the Networks folder. 
 
 Select the index of GPU (0 by default)
 
-## MNIST:
+### Run the code
 ```sh
-$ python main.py -config Networks/MNIST_CNN.yaml
-$ python main.py -config Networks/MNIST_CNN.yaml -checkpoint checkpoint/ckpt.pth // load the checkpoint
+$ python main.py -config Networks/config_file.yaml
+$ python main.py -config Networks/config_file.yaml -checkpoint checkpoint/ckpt.pth // load the checkpoint
 ```
 
-## N-MNIST:
-```sh
-$ python main.py -config Networks/NMNIST_CNN.yaml
-$ python main.py -config Networks/NMNIST_CNN.yaml -checkpoint checkpoint/ckpt.pth // load the checkpoint
-```
+## Results
+Our proposed method achieves the following performance on :
 
-## FashionMNIST:
-```sh
-$ python main.py -config Networks/FahsionMNIST_400_400.yaml
-$ python main.py -config Networks/FahsionMNIST_400_400.yaml -checkpoint checkpoint/ckpt.pth // load the checkpoint
-$ python main.py -config Networks/FahsionMNIST_CNN.yaml
-$ python main.py -config Networks/FahsionMNIST_CNN.yaml -checkpoint checkpoint/ckpt.pth // load with checkpoint
-```
+### MNIST
 
-## CIFAR10:
-```sh
-$ python main.py -config Networks/CIFAR10_CNN.yaml
-$ python main.py -config Networks/CIFAR10_CNN.yaml -checkpoint checkpoint/ckpt.pth   // load the checkpoint
-```
+| Network Size         | Time Steps | Epochs | Mean | Stddev | Best |
+| ------------------ |---------------- | -------------- | ------------- | ------------- | ------------- | 
+| 15C5-P2-40C5-P2-300   |     5         |     100      |  99.50% | 0.02% |  99.53% |
+
+### N-MNIST
+| Network Size         | Time Steps | Epochs | Mean | Stddev | Best |
+| ------------------ |---------------- | -------------- | ------------- | ------------- | ------------- | 
+| 12C5-P2-64C5-P2   |     100         |     100      |  99.35% | 0.03% |  99.40% |
+| 12C5-P2-64C5-P2   |     30         |     100      |  99.23% | 0.05% |  99.28% |
+
+### Fashion MNIST
+| Network Size         | Time Steps | Epochs | Mean | Stddev | Best |
+| ------------------ |---------------- | -------------- | ------------- | ------------- | ------------- | 
+| 400 − 400  |     5        |     100      |  89.75% | 0.03% |  89.80% |
+| 32C5-P2-64C5-P2-1024   |     5         |     100      |  92.69% | 0.09% |  92.83% |
+
+### CIFAR 10
+| Network Size         | Time Steps | Epochs | Mean | Stddev | Best |
+| ------------------ |---------------- | -------------- | ------------- | ------------- | ------------- | 
+| 96C3-256C3-P2-384C3-P2-384C3-256C3-1024-1024  |     5        |     150      |  88.98% | 0.27% |  89.22% |
+| 128C3-256C3-P2-512C3-P2-1024C3-512C3-1024-512   |     5         |     150      |  N/A | N/A |  91.41% |
