@@ -44,7 +44,7 @@ def train(network, trainloader, opti, epoch, states, network_config, layers_conf
         if n_steps >= 10:
             desired_spikes = torch.tensor([0, 1, 0, 1, 0, 1, 0, 1, 0, 1]).repeat(int(n_steps/10))
         else:
-            desired_spikes = torch.tensor([0, 1, 0, 1, 1]).repeat(int(n_steps/5))
+            desired_spikes = torch.tensor([0, 1, 1, 1, 1]).repeat(int(n_steps/5))
         desired_spikes = desired_spikes.view(1, 1, 1, 1, n_steps).to(device)
         desired_spikes = loss_f.psp(desired_spikes, network_config).view(1, 1, 1, n_steps)
         targets = torch.zeros((batch_size, n_class, 1, 1, n_steps), dtype=dtype).to(device) 
