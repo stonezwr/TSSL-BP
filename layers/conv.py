@@ -72,7 +72,7 @@ class ConvLayer(nn.Conv3d):
 
         super(ConvLayer, self).__init__(in_features, out_features, kernel, stride, padding, dilation, groups,
                                         bias=False)
-        nn.init.kaiming_normal_(self.weight)
+        # nn.init.kaiming_normal_(self.weight)
         self.weight = torch.nn.Parameter(weight_scale * self.weight, requires_grad=True)
 
         self.in_shape = in_shape
