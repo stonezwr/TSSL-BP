@@ -197,3 +197,80 @@ class PSP_spike_long_time(torch.autograd.Function):  # a and u is the incremnet 
             grad = grad_a * f
         return grad, None, None, None, None, None, None, None, None
     
+
+class PSP_spike_fast(torch.autograd.Function):  # a and u is the incremnet of each time steps
+    """
+    Here we implement our spiking nonlinearity which also implements
+    the surrogate gradient. By subclassing torch.autograd.Function,
+    we will be able to use all of PyTorch's autograd functionality.
+    """
+
+    @staticmethod
+    def forward(ctx, inputs, network_config, layer_config):
+        shape = inputs.shape
+        n_steps = network_config['n_steps']
+        theta_m = 1/network_config['tau_m']
+        theta_s = 1/network_config['tau_s']
+        threshold = layer_config['threshold']
+
+        mem = torch.zeros((shape[0], shape[1], shape[2], shape[3]), dtype=glv.dtype).to(glv.device)
+        syn = torch.zeros((shape[0], shape[1], shape[2], shape[3]), dtype=glv.dtype).to(glv.device)
+        mems = []
+        mem_updates = []
+        outputs = []
+        syns_posts = []
+        outputs = []
+        for t in range(n_steps):
+            mem_update = (-theta_m) * mem + inputs[..., t]
+            mem += mem_update
+
+            out = mem > threshold
+            out = out.type(glv.dtype)
+            mems.append(mem)
+            mem = mem * (1-out)
+            outputs.append(out)
+            mem_updates.append(mem_update)
+
+            syn = syn + (out - syn) * theta_s
+            syns_posts.append(syn)
+        mems = torch.stack(mems, dim = 4)
+        mem_updates = torch.stack(mem_updates, dim = 4)
+        syns_posts = torch.stack(syns_posts, dim = 4)
+        outputs = torch.stack(outputs, dim = 4)
+        ctx.save_for_backward(mem_updates, outputs, mems, torch.tensor([threshold]))
+        return syns_posts
+
+    @staticmethod
+    def backward(ctx, grad_delta):
+        # in: grad_output: e(l-1)
+        # out: grad: delta(l-1)
+        """
+        In the backward pass we receive a Tensor we need to compute the
+        surrogate gradient of the loss with respect to the input.
+        """
+        (delta_u, outputs, u, others) = ctx.saved_tensors
+        start_time = time()
+        shape = outputs.shape
+        n_steps = glv.n_steps
+        threshold = others[0].item()
+
+        mini_batch = 5
+        partial_a_inter = glv.partial_a.repeat(mini_batch, shape[1], shape[2], shape[3], 1, 1)
+        grad_a = torch.empty_like(delta_u)
+
+        for i in range(int(shape[0]/mini_batch)):
+            grad_a[i*mini_batch:(i+1)*mini_batch, ...] = torch.einsum('...ij, ...j -> ...i', partial_a_inter, grad_delta[i*mini_batch:(i+1)*mini_batch, ...])
+
+        if torch.sum(outputs)/(shape[0] * shape[1] * shape[2] * shape[3] * shape[4]) > 0.1:
+            partial_u = torch.clamp(1 / delta_u, -10, 10) * outputs
+            grad = grad_a * partial_u
+        else:
+            # computing partial a / partial u
+            a = 0.2
+            f = torch.clamp((-1 * u + threshold) / a, -8, 8)
+            f = torch.exp(f)
+            f = f / ((1 + f) * (1 + f) * a)
+
+            grad = grad_a * f
+        return grad, None, None, None, None, None, None, None, None
+
