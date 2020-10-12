@@ -77,7 +77,7 @@ class PSP_spike_large_batch(torch.autograd.Function):
         n_steps = glv.n_steps
         threshold = others[0].item()
 
-        mini_batch = 5
+        mini_batch = shape[0]
         partial_a_inter = glv.partial_a.repeat(mini_batch, shape[1], shape[2], shape[3], 1, 1)
         grad_a = torch.empty_like(delta_u)
 
@@ -234,7 +234,7 @@ class PSP_spike_fast(torch.autograd.Function):
         n_steps = glv.n_steps
         threshold = others[0].item()
 
-        mini_batch = 5
+        mini_batch = shape[0]
         partial_a_inter = glv.partial_a.repeat(mini_batch, shape[1], shape[2], shape[3], 1, 1)
         grad_a = torch.empty_like(delta_u)
 
