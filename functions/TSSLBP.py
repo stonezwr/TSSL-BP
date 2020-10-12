@@ -95,7 +95,7 @@ class PSP_spike_large_batch(torch.autograd.Function):
             partial_u = torch.clamp(1 / delta_u, -10, 10) * outputs
             grad = grad_a * partial_u
         else:
-            # computing partial a / partial u
+            # warm up
             a = 0.2
             f = torch.clamp((-1 * u + threshold) / a, -8, 8)
             f = torch.exp(f)
@@ -178,7 +178,6 @@ class PSP_spike_long_time(torch.autograd.Function):
             partial_u = torch.clamp(1 / delta_u, -10, 10) * outputs
             grad = grad_a * partial_u
         else:
-            # computing partial a / partial u
             a = 0.2
             f = torch.clamp((-1 * u + threshold) / a, -8, 8)
             f = torch.exp(f)
@@ -246,7 +245,6 @@ class PSP_spike_fast(torch.autograd.Function):
             partial_u = torch.clamp(1 / delta_u, -10, 10) * outputs
             grad = grad_a * partial_u
         else:
-            # computing partial a / partial u
             a = 0.2
             f = torch.clamp((-1 * u + threshold) / a, -8, 8)
             f = torch.exp(f)
