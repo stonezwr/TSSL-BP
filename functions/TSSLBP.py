@@ -20,13 +20,7 @@ def psp(inputs, network_config):
     return syns
 
 
-class PSP_spike_large_batch(torch.autograd.Function):  # a and u is the incremnet of each time steps
-    """
-    Here we implement our spiking nonlinearity which also implements
-    the surrogate gradient. By subclassing torch.autograd.Function,
-    we will be able to use all of PyTorch's autograd functionality.
-    """
-
+class PSP_spike_large_batch(torch.autograd.Function): 
     @staticmethod
     def forward(ctx, inputs, network_config, layer_config):
         shape = inputs.shape
@@ -77,10 +71,6 @@ class PSP_spike_large_batch(torch.autograd.Function):  # a and u is the incremne
     def backward(ctx, grad_delta):
         # in: grad_output: e(l-1)
         # out: grad: delta(l-1)
-        """
-        In the backward pass we receive a Tensor we need to compute the
-        surrogate gradient of the loss with respect to the input.
-        """
         (delta_u, outputs, u, delta_refs, others) = ctx.saved_tensors
         start_time = time()
         shape = outputs.shape
@@ -115,7 +105,7 @@ class PSP_spike_large_batch(torch.autograd.Function):  # a and u is the incremne
         return grad, None, None, None, None, None, None, None, None
 
 
-class PSP_spike_long_time(torch.autograd.Function):  # a and u is the incremnet of each time steps
+class PSP_spike_long_time(torch.autograd.Function):  
     @staticmethod
     def forward(ctx, inputs, network_config, layer_config):
         shape = inputs.shape
@@ -198,12 +188,7 @@ class PSP_spike_long_time(torch.autograd.Function):  # a and u is the incremnet 
         return grad, None, None, None, None, None, None, None, None
     
 
-class PSP_spike_fast(torch.autograd.Function):  # a and u is the incremnet of each time steps
-    """
-    Here we implement our spiking nonlinearity which also implements
-    the surrogate gradient. By subclassing torch.autograd.Function,
-    we will be able to use all of PyTorch's autograd functionality.
-    """
+class PSP_spike_fast(torch.autograd.Function):  
 
     @staticmethod
     def forward(ctx, inputs, network_config, layer_config):
@@ -244,10 +229,6 @@ class PSP_spike_fast(torch.autograd.Function):  # a and u is the incremnet of ea
     def backward(ctx, grad_delta):
         # in: grad_output: e(l-1)
         # out: grad: delta(l-1)
-        """
-        In the backward pass we receive a Tensor we need to compute the
-        surrogate gradient of the loss with respect to the input.
-        """
         (delta_u, outputs, u, others) = ctx.saved_tensors
         start_time = time()
         shape = outputs.shape
