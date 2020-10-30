@@ -71,9 +71,9 @@ class loss_kernel(torch.autograd.Function):  # a and u is the incremnet of each 
     @staticmethod
     def forward(ctx, outputs, target, network_config):
         # out_psp = psp(outputs, network_config)
-        # target_psp = psp(target, network_config)
-        # delta = out_psp - target_psp
-        return outputs-target
+        target_psp = psp(target, network_config)
+        delta = outputs - target_psp
+        return delta
 
     @staticmethod
     def backward(ctx, grad):
