@@ -48,7 +48,7 @@ Our proposed method achieves the following performance on :
 ### Fashion MNIST
 | Network Size         | Time Steps | Epochs | Mean | Stddev | Best |
 | ------------------ |---------------- | -------------- | ------------- | ------------- | ------------- | 
-| 400 − 400  |     5        |     100      |  89.75% | 0.03% |  89.80% |
+| 400 − 400  |     5        |     100      |  89.75% | 0.03% |  89.92% |
 | 32C5-P2-64C5-P2-1024   |     5         |     100      |  92.69% | 0.09% |  92.83% |
 
 ### CIFAR 10
