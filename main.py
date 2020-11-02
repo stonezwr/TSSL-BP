@@ -247,7 +247,7 @@ if __name__ == '__main__':
         l_states.testing.reset()
         test(net, test_loader, e, l_states, params['Network'], params['Layers'], early_stopping)
         l_states.testing.update()
-        if early_stopping.early_stop:
-            break
+        # if early_stopping.early_stop:
+        #     break
     
     logging.info("Best Accuracy: %.3f, at epoch: %d \n", best_acc, best_epoch)

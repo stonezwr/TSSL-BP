@@ -18,3 +18,4 @@ def init(dty, dev, n_t, ts):   # a(t_k) = (1/tau)exp(-(t_k-t_m)/tau)
         if t > 0:
             partial_a[..., t] = partial_a[..., t - 1] - partial_a[..., t - 1] / tau_s 
         partial_a[..., t, t] = 1/tau_s
+    partial_a /= tau_s
