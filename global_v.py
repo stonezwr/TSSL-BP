@@ -5,10 +5,11 @@ dtype = None
 device = None
 n_steps = None
 partial_a = None
+syn_a = None
 tau_s = None
 
-def init(dty, dev, n_t, ts):   # a(t_k) = (1/tau)exp(-(t_k-t_m)/tau)
-    global dtype, device, n_steps, partial_a, tau_s
+def init(dty, dev, n_t, ts):   # a(t_k) = (1/tau)exp(-(t_k-t_m)/tau)H(t_k-t_m)
+    global dtype, device, n_steps, partial_a, syn_a, tau_s
     dtype = dty
     device = dev
     n_steps = n_t
@@ -18,4 +19,7 @@ def init(dty, dev, n_t, ts):   # a(t_k) = (1/tau)exp(-(t_k-t_m)/tau)
         if t > 0:
             partial_a[..., t] = partial_a[..., t - 1] - partial_a[..., t - 1] / tau_s 
         partial_a[..., t, t] = 1/tau_s
-    partial_a /= tau_s
+    syn_a = partial_a.clone()
+    partial_a /= tau_s 
+    for t in range(n_steps):
+        partial_a[..., t, t] = -1/tau_s
