@@ -182,6 +182,7 @@ class PSP_spike_long_time(torch.autograd.Function):
             partial_u = torch.clamp(-1 / delta_u, -10, 10) * outputs
             grad = grad_a * partial_u
         else:
+            # warm up
             syn = glv.syn_a.repeat(shape[0], shape[1], shape[2], shape[3], 1, 1)
 
             grad_a = torch.einsum('...ij, ...j -> ...i', syn, grad_delta)
@@ -251,8 +252,7 @@ class PSP_spike_fast(torch.autograd.Function):
             partial_u = torch.clamp(-1 / delta_u, -10, 10) * outputs
             grad = grad_a * partial_u
         else:
-            # print("surrogate")
-            # print("\n")
+            # warm up
             syn = glv.syn_a.repeat(shape[0], shape[1], shape[2], shape[3], 1, 1)
 
             grad_a = torch.einsum('...ij, ...j -> ...i', syn, grad_delta)
