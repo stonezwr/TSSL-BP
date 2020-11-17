@@ -60,11 +60,7 @@ class LinearLayer(nn.Linear):
 
     def forward_pass(self, x, epoch):
         y = self.forward(x)
-        shape = x.shape
-        if shape[4] > shape[0] * 10:
-            y = TSSLBP.PSP_spike_long_time.apply(y, self.network_config, self.layer_config)
-        else:
-            y = TSSLBP.PSP_spike_large_batch.apply(y, self.network_config, self.layer_config)
+        y = TSSLBP.TSSLBP.apply(y, self.network_config, self.layer_config)
         return y
 
     def get_parameters(self):

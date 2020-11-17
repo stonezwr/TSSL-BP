@@ -47,10 +47,10 @@ def train(network, trainloader, opti, epoch, states, network_config, layers_conf
             desired_spikes = torch.tensor([0, 1, 1, 1, 1]).repeat(int(n_steps/5))
         desired_spikes = desired_spikes.view(1, 1, 1, 1, n_steps).to(device)
         desired_spikes = loss_f.psp(desired_spikes, network_config).view(1, 1, 1, n_steps)
-        targets = torch.zeros((batch_size, n_class, 1, 1, n_steps), dtype=dtype).to(device) 
     des_str = "Training @ epoch " + str(epoch)
     for batch_idx, (inputs, labels) in enumerate(trainloader):
         start_time = datetime.now()
+        targets = torch.zeros((labels.shape[0], n_class, 1, 1, n_steps), dtype=dtype).to(device) 
         if network_config["rule"] == "TSSLBP":
             if len(inputs.shape) < 5:
                 inputs = inputs.unsqueeze_(-1).repeat(1, 1, 1, 1, n_steps)
