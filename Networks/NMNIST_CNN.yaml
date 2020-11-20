@@ -13,6 +13,7 @@ Network:
   tau_m: 8
   tau_s: 4
   model: "LIF"
+  warmup: 0.01
 
 Layers:
   conv_1:

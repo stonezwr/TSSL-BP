@@ -22,4 +22,4 @@ def init(dty, dev, n_t, ts):   # a(t_k) = (1/tau)exp(-(t_k-t_m)/tau)H(t_k-t_m)
     syn_a = partial_a.clone()
     partial_a /= tau_s 
     for t in range(n_steps):
-        partial_a[..., t, t] = -1/tau_s
+        partial_a[..., t, t] = -1

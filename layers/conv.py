@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as f
 import torch.nn.init as init
-import functions.TSSLBP as TSSLBP
+import functions.tsslbp as tsslbp
 import global_v as glv
 
 
@@ -93,7 +93,9 @@ class ConvLayer(nn.Conv3d):
 
     def forward_pass(self, x, epoch):
         y = self.forward(x)
-        y = TSSLBP.TSSLBP.apply(y, self.network_config, self.layer_config)
+        # y = tsslbp.TSSLBP.apply(y, self.network_config, self.layer_config)
+        # this method cost less memory
+        y = tsslbp.TSSLBP_long_time.apply(y, self.network_config, self.layer_config)
         return y
 
     def weight_clipper(self):

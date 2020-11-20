@@ -4,7 +4,7 @@ import layers.conv as conv
 import layers.pooling as pooling
 import layers.dropout as dropout
 import layers.linear as linear
-import functions.TSSLBP as f
+import functions.loss_f as f
 import global_v as glv
 
 
