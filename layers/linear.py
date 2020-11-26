@@ -60,9 +60,7 @@ class LinearLayer(nn.Linear):
 
     def forward_pass(self, x, epoch):
         y = self.forward(x)
-        # y = tsslbp.TSSLBP.apply(y, self.network_config, self.layer_config)
-        # this method cost less memory
-        y = tsslbp.TSSLBP_long_time.apply(y, self.network_config, self.layer_config)
+        y = tsslbp.TSSLBP.apply(y, self.network_config, self.layer_config)
         return y
 
     def get_parameters(self):
