@@ -58,7 +58,7 @@ class TSSLBP(torch.autograd.Function):
         partial_a = glv.partial_a.repeat(shape[0], shape[1], shape[2], shape[3], 1)
 
         if torch.sum(outputs)/(shape[0]*shape[1]*shape[2]*shape[3]*shape[4]) > 0.1:
-            theta = torch.zeros((shape[0], shape[1], shape[2], shape[3], n_steps), dtype=glv.dtype, device=glv.device)
+            theta = torch.zeros((shape[0], shape[1], shape[2], shape[3]), dtype=glv.dtype, device=glv.device)
             for t in range(n_steps-1, -1, -1): 
                 # time_end = int(min(t+tau_s, n_steps))
                 time_end = n_steps
@@ -68,18 +68,16 @@ class TSSLBP(torch.autograd.Function):
                 partial_u = (torch.clamp(-1/delta_u[..., t], -10, 10) * out)
                 
                 # current time is t_m 
-                partial_a_partial_u = theta[..., t:time_end] * ((1-out) * (1-theta_m)).unsqueeze(-1).repeat(1, 1, 1, 1, time_len)
-
-                partial_a_partial_u += partial_u.unsqueeze(-1).repeat(1, 1, 1, 1, time_len) * partial_a[..., 0:time_len]
+                partial_a_partial_u = partial_u.unsqueeze(-1).repeat(1, 1, 1, 1, time_len) * partial_a[..., 0:time_len]
 
                 grad[..., t] = torch.sum(partial_a_partial_u*grad_delta[..., t:time_end], dim=4) 
 
                 # effect of reset
                 if t!=n_steps-1:
-                    grad[..., t] += grad[..., t+1] * u[..., t]*(-1)*(1-theta_m) * partial_u
+                    grad[..., t] += theta * u[..., t] * (1) * theta_m * partial_u
               
                 # current time is t_p
-                theta[..., t:time_end] = partial_a_partial_u * out.unsqueeze(-1).repeat(1, 1, 1, 1, time_len) + theta[..., t:time_end] * ((1-out)*(1-theta_m)).unsqueeze(-1).repeat(1, 1, 1, 1,time_len)
+                theta = grad[..., t] * out + theta * (1-out) * (1-theta_m)
 
         else:
             for t in range(n_steps):
