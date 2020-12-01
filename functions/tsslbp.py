@@ -74,7 +74,7 @@ class TSSLBP(torch.autograd.Function):
 
                 # effect of reset
                 if t!=n_steps-1:
-                    grad[..., t] += theta * u[..., t] * (1) * theta_m * partial_u
+                    grad[..., t] += theta * u[..., t] * (-1) * theta_m * partial_u
               
                 # current time is t_p
                 theta = grad[..., t] * out + theta * (1-out) * (1-theta_m)
