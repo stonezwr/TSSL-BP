@@ -11,7 +11,7 @@ Network:
   desired_count: 5
   undesired_count: 1
   tau_m: 5
-  tau_s: 2
+  tau_s: 3
   model: "LIF"
 
 Layers:
