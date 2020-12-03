@@ -55,11 +55,10 @@ class TSSLBP(torch.autograd.Function):
         grad = torch.zeros_like(grad_delta)
 
         syn_a = glv.syn_a.repeat(shape[0], shape[1], shape[2], shape[3], 1)
-        partial_a = glv.syn_a/tau_s
-        partial_a[..., 0] = -1
+        partial_a = glv.syn_a/(-tau_s)
         partial_a = partial_a.repeat(shape[0], shape[1], shape[2], shape[3], 1)
 
-        if torch.sum(outputs)/(shape[0]*shape[1]*shape[2]*shape[3]*shape[4]) > 0.1:
+        if torch.sum(outputs)/(shape[0]*shape[1]*shape[2]*shape[3]*shape[4]) > 0.05:
             theta = torch.zeros((shape[0], shape[1], shape[2], shape[3]), dtype=glv.dtype, device=glv.device)
             for t in range(n_steps-1, -1, -1): 
                 # time_end = int(min(t+tau_s, n_steps))
