@@ -70,7 +70,7 @@ class TSSLBP(torch.autograd.Function):
 
             out = outputs[..., t]
 
-            partial_u = torch.clamp(-1/delta_u[..., t], -8, 0) 
+            partial_u = torch.clamp(-1/delta_u[..., t], -8, 0) * out
             
             # current time is t_m 
             partial_a_partial_u = partial_u.unsqueeze(-1).repeat(1, 1, 1, 1, time_len) * partial_a[..., 0:time_len]
