@@ -7,7 +7,7 @@ n_steps = None
 syn_a = None
 tau_s = None
 
-def init(dty, dev, n_t, ts):   # a(t_k) = (1/tau)exp(-(t_k-t_m)/tau)H(t_k-t_m)
+def init(dty, dev, n_t, ts):   
     global dtype, device, n_steps, syn_a, partial_a, tau_s
     dtype = dty
     device = dev
