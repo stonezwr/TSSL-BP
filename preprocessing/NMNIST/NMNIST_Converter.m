@@ -44,7 +44,7 @@ function NMNIST_Converter(train_or_test, use_two_channels, time_window)
         max_times = zeros(10000, 1);
     else
         fprintf('The dataset argument can only be `Train` or `Test`! Unrecognitized arg: %s\n', train_or_test)
-        exit(0);
+        return;
     end
     x_dim = 34;
     y_dim = 34;
@@ -59,16 +59,11 @@ function NMNIST_Converter(train_or_test, use_two_channels, time_window)
             total_channels = x_dim * y_dim;
         end
         % handle the output file:
-        directory_des = sprintf('%d_%d_stable/', total_channels, time_window);
+        directory_des = strcat(sprintf('%d_%d_stable/', total_channels, time_window), train_or_test, '/', num2str(class), '/');
         Readfiles = dir(fullfile(directory_src,'*.bin'));
         file_num = length(Readfiles);
         if ~exist(directory_des, 'dir')
             mkdir(directory_des);
-        end
-        filename = strcat(directory_des, train_or_test,'_',num2str(class),'.dat');
-        fid = fopen(filename,'w');
-        if fid == -1
-            fprintf('Cannot open the file: %s for writing!', filename);
         end
         
         % for samples in the same class
@@ -101,6 +96,11 @@ function NMNIST_Converter(train_or_test, use_two_channels, time_window)
             max_times(sample_id) = max(ts_compressed + 1);
             sample_id = sample_id + 1;
             
+            filename = strcat(directory_des, num2str(ii),'.dat');
+            fid = fopen(filename,'w');
+            if fid == -1
+                fprintf('Cannot open the file: %s for writing!', filename);
+            end
             % dump each channels to the file
             for i = 1:total_channels
                 inds = find(channel == i);
@@ -110,19 +110,17 @@ function NMNIST_Converter(train_or_test, use_two_channels, time_window)
                 end
             end
             % separator:
-            fprintf(fid,'#\n');
+            fclose(fid);
             % the following code is for visualization
             % figure
             % plotSpikeRaster(mat == 1);
             perc = 100*(sample_id/total_sample);
             waitbar(perc/100, h, sprintf('Processing %.2f%% ...',perc));
         end
-        fclose(fid);
     end
     close(h);
     fprintf('The average ignored spike per sample is %f\n', lost_spikes / sample_id);
     fprintf('The max spike train duration is %d\n', max(max_times));
     fprintf('The median spike train duration is %d\n', median(max_times));
 end
-
 
