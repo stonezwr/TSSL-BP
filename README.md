@@ -1,6 +1,6 @@
 # Temporal Spike Sequence Learning via Backpropagation for Deep Spiking Neural Networks (TSSL-BP)
 
-This repository is the official implementation of [Temporal Spike Sequence Learning via Backpropagation for Deep Spiking Neural Networks](https://arxiv.org/abs/2002.10085). 
+This repository is the official implementation of [Temporal Spike Sequence Learning via Backpropagation for Deep Spiking Neural Networks](https://proceedings.neurips.cc/paper/2020/hash/8bdb5058376143fa358981954e7626b8-Abstract.html). 
 
 ## Requirements
 ### Dependencies and Libraries
