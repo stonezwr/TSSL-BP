@@ -20,17 +20,14 @@ class Network(nn.Module):
             c = layers_config[key]
             if c['type'] == 'conv':
                 self.layers.append(conv.ConvLayer(network_config, c, key, input_shape))
-                self.layers[-1].to(glv.device)
                 input_shape = self.layers[-1].out_shape
                 parameters.append(self.layers[-1].get_parameters())
             elif c['type'] == 'linear':
                 self.layers.append(linear.LinearLayer(network_config, c, key, input_shape))
-                self.layers[-1].to(glv.device)
                 input_shape = self.layers[-1].out_shape
                 parameters.append(self.layers[-1].get_parameters())
             elif c['type'] == 'pooling':
                 self.layers.append(pooling.PoolLayer(network_config, c, key, input_shape))
-                self.layers[-1].to(glv.device)
                 input_shape = self.layers[-1].out_shape
             elif c['type'] == 'dropout':
                 self.layers.append(dropout.DropoutLayer(c, key))

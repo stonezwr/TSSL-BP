@@ -65,7 +65,7 @@ class PoolLayer(nn.Conv3d):
             raise Exception('dilation can be either int or tuple of size 2. It was: {}'.format(dilation.shape))
         super(PoolLayer, self).__init__(1, 1, kernel, stride, padding, dilation, bias=False)
 
-        self.weight = torch.nn.Parameter(1 * theta * torch.ones(self.weight.shape), requires_grad=False)
+        self.weight = torch.nn.Parameter(1 * theta * torch.ones(self.weight.shape).cuda(), requires_grad=False)
         self.in_shape = in_shape
         self.out_shape = [in_shape[0], int((in_shape[1] + 2 * padding[0] - kernel[0]) / stride[0] + 1),
                           int((in_shape[2] + 2 * padding[1] - kernel[1]) / stride[1] + 1)]

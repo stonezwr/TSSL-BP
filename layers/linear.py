@@ -39,7 +39,7 @@ class LinearLayer(nn.Linear):
         super(LinearLayer, self).__init__(n_inputs, n_outputs, bias=False)
 
         nn.init.kaiming_normal_(self.weight)
-        self.weight = torch.nn.Parameter(weight_scale * self.weight, requires_grad=True)
+        self.weight = torch.nn.Parameter(weight_scale * self.weight.cuda(), requires_grad=True)
         
         print("linear")
         print(self.name)

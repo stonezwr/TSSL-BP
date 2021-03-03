@@ -1,6 +1,7 @@
 import os
 
 import torch
+import torch.backends.cudnn as cudnn
 from network_parser import parse
 from datasets import loadMNIST, loadCIFAR10, loadFashionMNIST, loadNMNIST_Spiking 
 import logging
@@ -28,6 +29,7 @@ min_loss = 1000
 
 
 def train(network, trainloader, opti, epoch, states, network_config, layers_config, err):
+    network.train()
     global max_accuracy
     global min_loss
     logging.info('\nEpoch: %d', epoch)
@@ -45,29 +47,27 @@ def train(network, trainloader, opti, epoch, states, network_config, layers_conf
             desired_spikes = torch.tensor([0, 1, 0, 1, 0, 1, 0, 1, 0, 1]).repeat(int(n_steps/10))
         else:
             desired_spikes = torch.tensor([0, 1, 1, 1, 1]).repeat(int(n_steps/5))
-        desired_spikes = desired_spikes.view(1, 1, 1, 1, n_steps).to(device)
+        desired_spikes = desired_spikes.view(1, 1, 1, 1, n_steps).cuda()
         desired_spikes = loss_f.psp(desired_spikes, network_config).view(1, 1, 1, n_steps)
     des_str = "Training @ epoch " + str(epoch)
     for batch_idx, (inputs, labels) in enumerate(trainloader):
         start_time = datetime.now()
-        targets = torch.zeros((labels.shape[0], n_class, 1, 1, n_steps), dtype=dtype).to(device) 
+        targets = torch.zeros(labels.shape[0], n_class, 1, 1, n_steps).cuda() 
         if network_config["rule"] == "TSSLBP":
             if len(inputs.shape) < 5:
                 inputs = inputs.unsqueeze_(-1).repeat(1, 1, 1, 1, n_steps)
             # forward pass
-            labels = labels.to(device)
-            inputs = inputs.to(device)
-            inputs.type(dtype)
+            labels = labels.cuda()
+            inputs = inputs.cuda()
+            inputs.type(torch.float32)
             outputs = network.forward(inputs, epoch, True)
-            # print("time cost forward:")
-            # print(round((datetime.now() - start_time).total_seconds(), 2))
 
             if network_config['loss'] == "count":
                 # set target signal
                 desired_count = network_config['desired_count']
                 undesired_count = network_config['undesired_count']
 
-                targets = torch.ones((outputs.shape[0], outputs.shape[1], 1, 1), dtype=dtype).to(device) * undesired_count
+                targets = torch.ones(outputs.shape[0], outputs.shape[1], 1, 1).cuda() * undesired_count
                 for i in range(len(labels)):
                     targets[i, labels[i], ...] = desired_count
                 loss = err.spike_count(outputs, targets, network_config, layers_config[list(layers_config.keys())[-1]])
@@ -115,6 +115,7 @@ def train(network, trainloader, opti, epoch, states, network_config, layers_conf
 
 
 def test(network, testloader, epoch, states, network_config, layers_config, early_stopping):
+    network.eval()
     global best_acc
     global best_epoch
     correct = 0
@@ -125,30 +126,28 @@ def test(network, testloader, epoch, states, network_config, layers_config, earl
     y_pred = []
     y_true = []
     des_str = "Testing @ epoch " + str(epoch)
-    with torch.no_grad():
-        # for batch_idx, (inputs, labels) in enumerate(track(testloader, description=des_str, auto_refresh=False)):
-        for batch_idx, (inputs, labels) in enumerate(testloader):
-            if network_config["rule"] == "TSSLBP":
-                if len(inputs.shape) < 5:
-                    inputs = inputs.unsqueeze_(-1).repeat(1, 1, 1, 1, n_steps)
-                # forward pass
-                labels = labels.to(device)
-                inputs = inputs.to(device)
-                outputs = network.forward(inputs, epoch, False)
+    for batch_idx, (inputs, labels) in enumerate(testloader):
+        if network_config["rule"] == "TSSLBP":
+            if len(inputs.shape) < 5:
+                inputs = inputs.unsqueeze_(-1).repeat(1, 1, 1, 1, n_steps)
+            # forward pass
+            labels = labels.cuda()
+            inputs = inputs.cuda()
+            outputs = network.forward(inputs, epoch, False)
 
-                spike_counts = torch.sum(outputs, dim=4).squeeze_(-1).squeeze_(-1).detach().cpu().numpy()
-                predicted = np.argmax(spike_counts, axis=1)
-                labels = labels.cpu().numpy()
-                y_pred.append(predicted)
-                y_true.append(labels)
-                total += len(labels)
-                correct += (predicted == labels).sum().item()
-            else:
-                raise Exception('Unrecognized rule name.')
+            spike_counts = torch.sum(outputs, dim=4).squeeze_(-1).squeeze_(-1).detach().cpu().numpy()
+            predicted = np.argmax(spike_counts, axis=1)
+            labels = labels.cpu().numpy()
+            y_pred.append(predicted)
+            y_true.append(labels)
+            total += len(labels)
+            correct += (predicted == labels).sum().item()
+        else:
+            raise Exception('Unrecognized rule name.')
 
-            states.testing.correctSamples += (predicted == labels).sum().item()
-            states.testing.numSamples = total
-            states.print(epoch, batch_idx, (datetime.now() - time).total_seconds())
+        states.testing.correctSamples += (predicted == labels).sum().item()
+        states.testing.numSamples = total
+        states.print(epoch, batch_idx, (datetime.now() - time).total_seconds())
 
     test_accuracy = correct / total
     if test_accuracy > best_acc:
@@ -172,6 +171,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-config', action='store', dest='config', help='The path of config file')
     parser.add_argument('-checkpoint', action='store', dest='checkpoint', help='The path of checkpoint, if use checkpoint')
+    parser.add_argument('-gpu', type=int, default=0, help='GPU device to use (default: 0)')
+    parser.add_argument('-seed', type=int, default=3, help='random seed (default: 3)')
     try:
         args = parser.parse_args()
     except:
@@ -191,20 +192,19 @@ if __name__ == '__main__':
     
     logging.info("finish parsing settings")
     
-    dtype = torch.float32
+    # check GPU
+    if not torch.cuda.is_available():
+        logging.info('no gpu device available')
+        sys.exit(1)
     
-    # Check whether a GPU is available
-    if torch.cuda.is_available():
-        device = torch.device("cuda")
-        cuda.init()
-        c_device = aboutCudaDevices()
-        print(c_device.info())
-        print("selected device: ", device)
-    else:
-        device = torch.device("cpu")
-        print("No GPU is found")
+    # set GPU
+    torch.cuda.set_device(args.gpu)
+    cudnn.benchmark = True
+    cudnn.enabled = True
+    torch.cuda.manual_seed_all(args.seed)
+    np.random.seed(args.seed)
     
-    glv.init(dtype, device, params['Network']['n_steps'], params['Network']['tau_s'] )
+    glv.init(params['Network']['n_steps'], params['Network']['tau_s'] )
     
     logging.info("dataset loaded")
     if params['Network']['dataset'] == "MNIST":
@@ -223,14 +223,14 @@ if __name__ == '__main__':
         raise Exception('Unrecognized dataset name.')
     logging.info("dataset loaded")
     
-    net = cnns.Network(params['Network'], params['Layers'], list(train_loader.dataset[0][0].shape)).to(device)
+    net = cnns.Network(params['Network'], params['Layers'], list(train_loader.dataset[0][0].shape)).cuda()
     
     if args.checkpoint is not None:
         checkpoint_path = args.checkpoint
         checkpoint = torch.load(checkpoint_path)
         net.load_state_dict(checkpoint['net'])
     
-    error = loss_f.SpikeLoss(params['Network']).to(device)
+    error = loss_f.SpikeLoss(params['Network']).cuda()
     
     optimizer = torch.optim.AdamW(net.get_parameters(), lr=params['Network']['lr'], betas=(0.9, 0.999))
     

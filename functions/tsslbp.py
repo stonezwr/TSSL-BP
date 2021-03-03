@@ -15,8 +15,8 @@ class TSSLBP(torch.autograd.Function):
         theta_s = 1/tau_s
         threshold = layer_config['threshold']
 
-        mem = torch.zeros((shape[0], shape[1], shape[2], shape[3]), dtype=glv.dtype, device=glv.device)
-        syn = torch.zeros((shape[0], shape[1], shape[2], shape[3]), dtype=glv.dtype).to(glv.device)
+        mem = torch.zeros(shape[0], shape[1], shape[2], shape[3]).cuda()
+        syn = torch.zeros(shape[0], shape[1], shape[2], shape[3]).cuda()
         syns_posts = []
         mems = []
         mem_updates = []
@@ -26,7 +26,7 @@ class TSSLBP(torch.autograd.Function):
             mem += mem_update
 
             out = mem > threshold
-            out = out.type(glv.dtype)
+            out = out.type(torch.float32)
 
             mems.append(mem)
 
@@ -61,9 +61,9 @@ class TSSLBP(torch.autograd.Function):
         partial_a = glv.syn_a/(-tau_s)
         partial_a = partial_a.repeat(shape[0], shape[1], shape[2], shape[3], 1)
 
-        o = torch.zeros((shape[0], shape[1], shape[2], shape[3]), dtype=glv.dtype, device=glv.device)
+        o = torch.zeros(shape[0], shape[1], shape[2], shape[3]).cuda()
         
-        theta = torch.zeros((shape[0], shape[1], shape[2], shape[3]), dtype=glv.dtype, device=glv.device)
+        theta = torch.zeros(shape[0], shape[1], shape[2], shape[3]).cuda()
         for t in range(n_steps-1, -1, -1): 
             time_end = n_steps
             time_len = time_end-t
