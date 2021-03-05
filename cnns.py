@@ -41,12 +41,12 @@ class Network(nn.Module):
         skip_spikes = {}
         assert self.network_config['model'] == "LIF"
         
-        for i in range(len(self.layers)):
-            if self.layers[i].type == "dropout":
+        for l in self.layers:
+            if l.type == "dropout":
                 if is_train:
-                    spikes = self.layers[i](spikes)
+                    spikes = l(spikes)
             elif self.network_config["rule"] == "TSSLBP":
-                spikes = self.layers[i].forward_pass(spikes, epoch)
+                spikes = l.forward_pass(spikes, epoch)
             else:
                 raise Exception('Unrecognized rule type. It is: {}'.format(self.network_config['rule']))
         return spikes
@@ -57,3 +57,11 @@ class Network(nn.Module):
     def weight_clipper(self):
         for l in self.layers:
             l.weight_clipper()
+
+    def train(self):
+        for l in self.layers:
+            l.train()
+
+    def eval(self):
+        for l in self.layers:
+            l.eval()
