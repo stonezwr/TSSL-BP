@@ -4,7 +4,7 @@ Network:
   n_steps: 5
   dataset: "MNIST"
   rule: "TSSLBP"
-  data_path: "../../datasets/mnist"
+  data_path: "/home/lucas/SNN-Research/datasets/mnist"
   lr: 0.0005
   loss: "kernel"
   n_class: 10

@@ -16,11 +16,14 @@ class TSSLBP(torch.autograd.Function):
         threshold = layer_config['threshold']
 
         mem = torch.zeros(shape[0], shape[1], shape[2], shape[3]).cuda()
-        syn = torch.zeros(shape[0], shape[1], shape[2], shape[3]).cuda()
+        syn = torch.zeros(shape[0], shape[1], shape[2], shape[3]).cuda() #membrane voltages
+
         syns_posts = []
+
         mems = []
         mem_updates = []
         outputs = []
+
         for t in range(n_steps):
             mem_update = (-theta_m) * mem + inputs[..., t]
             mem += mem_update
@@ -30,28 +33,50 @@ class TSSLBP(torch.autograd.Function):
 
             mems.append(mem)
 
-            mem = mem * (1-out)
+            mem = mem * (1-out) #if spikes, membrane voltage back to 0
             outputs.append(out)
             mem_updates.append(mem_update)
-            syn = syn + (out - syn) * theta_s
+
+            #original: 
+            #syn = syn + (out - syn) * theta_s
+            
+            #new: syns_posts of all time steps before t
+            #t = current time step, n = total time steps, theta = decay
+            
+            count = n_steps - t
+            ind = 0
+            sum = 0
+            while (count > 0):
+                sum += glv.syn_a[..., ind] #theta_s is decay, we keep multiplying the decay for every time step
+                ind += 1
+                count -= 1
+            alpha = 1 / sum
+            print(t, alpha)
+            syn = syn - (syn * theta_s) + out * alpha #multiply 'out' by our constant
+            print(t, syn)
             syns_posts.append(syn)
+
 
         mems = torch.stack(mems, dim = 4)
         mem_updates = torch.stack(mem_updates, dim = 4)
         outputs = torch.stack(outputs, dim = 4)
         syns_posts = torch.stack(syns_posts, dim = 4)
-        ctx.save_for_backward(mem_updates, outputs, mems, syns_posts, torch.tensor([threshold, tau_s, theta_m]))
+        ctx.save_for_backward(mem_updates, outputs, mems, syns_posts, torch.tensor([threshold, tau_s, theta_m])) #used for backprop
+
+        exit()
 
         return syns_posts
 
+
     @staticmethod
     def backward(ctx, grad_delta):
-        (delta_u, outputs, u, syns, others) = ctx.saved_tensors
+        (delta_u, outputs, u, syns, others) = ctx.saved_tensors 
         shape = grad_delta.shape
-        n_steps = shape[4]
-        threshold = others[0].item()
+        n_steps = shape[4] 
+        threshold = others[0].item() 
         tau_s = others[1].item()
-        theta_m = others[2].item()
+        theta_m = others[2].item() #ties into Vmem graph and how it decays
+        # print(grad_delta.shape)
 
         th = 1/(4 * tau_s)
 
@@ -62,18 +87,31 @@ class TSSLBP(torch.autograd.Function):
         partial_a = partial_a.repeat(shape[0], shape[1], shape[2], shape[3], 1)
 
         o = torch.zeros(shape[0], shape[1], shape[2], shape[3]).cuda()
-        
+
+
         theta = torch.zeros(shape[0], shape[1], shape[2], shape[3]).cuda()
-        for t in range(n_steps-1, -1, -1): 
-            time_end = n_steps
-            time_len = time_end-t
+        for t in range(n_steps-1, -1, -1): #adjusted for indexing from n_steps-1 to 0
+            time_end = n_steps 
+            time_len = time_end-t #this will be less impactful for spikes near time_end
+
+            count = time_len
+            sum = 0
+            while (count > 0):
+                sum += glv.syn_a[..., count-1]
+                count -= 1
+            alpha = (1 / sum)
+            print(t, alpha)
 
             out = outputs[..., t]
 
-            partial_u = torch.clamp(-1/delta_u[..., t], -8, 0) * out
-            
-            # current time is t_m 
-            partial_a_partial_u = partial_u.unsqueeze(-1).repeat(1, 1, 1, 1, time_len) * partial_a[..., 0:time_len]
+            partial_u = torch.clamp(-1/delta_u[..., t], -8, 0) * out #constant no matter where spiking occurs 
+
+            #OG:
+            #partial_a_partial_u = partial_u.unsqueeze(-1).repeat(1, 1, 1, 1, time_len) * partial_a[..., 0:time_len] 
+
+            #NEW:
+            #print(alpha.shape, partial_a[..., 0:time_len].shape, partial_u.unsqueeze(-1).shape)
+            partial_a_partial_u = partial_u.unsqueeze(-1).repeat(1, 1, 1, 1, time_len) * alpha * partial_a[..., 0:time_len]
 
             grad_tmp = torch.sum(partial_a_partial_u*grad_delta[..., t:time_end]*tau_s, dim=4) 
 
@@ -81,7 +119,6 @@ class TSSLBP(torch.autograd.Function):
                 grad_tmp += theta * u[..., t] * (-1) * theta_m * partial_u
                 grad_tmp += theta * (1-theta_m) * (1-out)
           
-            # current time is t_p
             theta = grad_tmp * out + theta * (1-out) * (1-theta_m)
 
             grad_a = torch.sum(syn_a[..., 0:time_len]*grad_delta[..., t:time_end], dim=-1)
@@ -99,5 +136,14 @@ class TSSLBP(torch.autograd.Function):
 
             grad[..., t] = grad_tmp
 
+        #exit()
+
         return grad, None, None
+    
+            
+                
+
+
+
+
     
